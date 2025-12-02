@@ -1,19 +1,23 @@
-#include <linux/if_ether.h>
-#include <netinet/in.h>
-#include <string.h>
+#include <stdio.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include <net/if.h>
-#include <net/ethernet.h>
 #include <linux/if_packet.h>
+
+#include <string.h>
+
+#include "../headers/sniffer.h"
 #include "../headers/utils.h"
 
 int main(int argc, char *argv[])
 {
-	int sockfd, ifIndex, len;
+	int sockfd, ifIndex, len, result;
 	struct ifreq ifr;
 	struct sockaddr_ll sll;
 	char interface[6], buffer[DIM_BUF];
+	
 
 	if (argc != 2){
 		usage();
@@ -52,6 +56,8 @@ int main(int argc, char *argv[])
 	while (1) {
 		len = recv(sockfd, buffer, sizeof(buffer), 0);
 
+		result = handlePacket(buffer, len);
+	
 	}
 
 	return 0;

@@ -1,9 +1,10 @@
-#include <linux/sockios.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <net/if.h>
 #include <string.h>
-#include <sys/ioctl.h>
+
 #include "../headers/utils.h"
 
 const char ipForwardFile[] = "/proc/sys/net/ipv4/ip_forward";
@@ -50,5 +51,16 @@ int enablePromisc(struct ifreq *ifr, char *interface, int sockfd) {
 
 	return index;
 
+}
+
+
+char* mac_str(const unsigned char *mac_addr) {
+	static char buf_mac[18];
+
+	snprintf(buf_mac, 18, "%02X:%02X:%02X:%02X:%02X:%02X",
+             mac_addr[0], mac_addr[1], mac_addr[2], 
+             mac_addr[3], mac_addr[4], mac_addr[5]);
+
+	return buf_mac;
 }
 
