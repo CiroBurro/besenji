@@ -15,3 +15,5 @@ int ipForward();
 int enablePromisc(struct ifreq *ifr, char *interface, int sockfd);
 
 char* mac_str(const unsigned char *mac_addr);
+
+void dump(unsigned char *data_buffer, unsigned int length);

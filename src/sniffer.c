@@ -56,18 +56,48 @@ int parseIp(struct iphdr *ipHdr) {
 
 	return protocol;
 }
+
 void parseTcp(struct tcphdr *tcpHdr) {
+	
+	printf("[L4: TCP]\n  Source port:\t%hu\n  Dest port:\t%hu\n  Seq:\t%u\n  Ack:\t%u\n Flags: ", ntohs(tcpHdr->source), ntohs(tcpHdr->dest), ntohl(tcpHdr->seq), ntohl(tcpHdr->ack_seq));
+
+	if (tcpHdr->syn) {
+		printf("SYN ");
+	}
+	if (tcpHdr->ack) {
+    printf("ACK ");
+	}
+	if (tcpHdr->fin) {
+    printf("FIN ");
+	}
+	if (tcpHdr->rst) {
+    printf("RST ");
+	}
+	if (tcpHdr->psh) {
+    printf("PSH ");
+	}
+	if (tcpHdr->urg) {
+    printf("URG ");
+	}
+	printf("\n\n");
 
 }
+
+void parseUdp(struct udphdr *udpHdr) {
+
+	printf("[L4: UDP]\n  Source port:\t%hu\n  Dest port:\t%hu\n\n", ntohs(udpHdr->source), ntohs(udpHdr->dest));
+
+}
+
 
 int handlePacket(char *buf, int len) {
 	struct ethhdr *ethHdr;
 	struct iphdr *ipHdr;
 	struct tcphdr *tcpHdr;
 	struct udphdr *udpHdr;
-	int isIp, ipProt;
+	int isIp, ipProt, dataLen;
 
-	printf("--- Captured Packet (%d bytes) ---\n", len);
+	printf("\n\n--- Captured Packet (%d bytes) ---\n", len);
 
 	if (len < sizeof(struct ethhdr)) {
 		return SUCCESS;
@@ -85,6 +115,39 @@ int handlePacket(char *buf, int len) {
 	
 		ipHdr = (struct iphdr*) (buf + sizeof(struct ethhdr));
 		ipProt = parseIp(ipHdr);
+
+		if (ipProt == IPPROTO_TCP) {
+			tcpHdr = (struct tcphdr*) (buf + sizeof(struct ethhdr) + sizeof(ipHdr));
+			parseTcp(tcpHdr);
+
+			dataLen = len - sizeof(struct ethhdr) - sizeof(ipHdr) - sizeof(tcpHdr);
+
+			if (dataLen > 0) {
+				printf("%u bytes of packet data\n", dataLen);
+				dump(buf + len - dataLen, dataLen);
+			}
+			else {
+				printf("No Packet Data\n\n");
+			}
+
+		}
+		else if (ipProt == IPPROTO_UDP) {
+
+			udpHdr = (struct udphdr*) (buf + sizeof(struct ethhdr) + sizeof(ipHdr));
+			parseUdp(udpHdr);
+
+			dataLen = len - sizeof(struct ethhdr) - sizeof(ipHdr) - sizeof(udpHdr);
+
+			if (dataLen > 0) {
+				printf("%u bytes of packet data\n", dataLen);
+				dump(buf + len - dataLen, dataLen);
+			}
+			else {
+				printf("No Packet Data\n\n");
+			}
+
+		}
+
 	}
 
 
