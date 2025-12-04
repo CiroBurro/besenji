@@ -20,15 +20,22 @@ void panic(const char *errMsg) {
 	exit(FAILURE);
 }
 
-int ipForward() {
+int ipForward(int value) {
 	FILE *fp;
 	int result = SUCCESS;
+	char c;
+
+	switch (value) {
+		case 0: c = '0'; break;
+		case 1: c = '1'; break;
+		default: panic("Invalid value for ip forwaring");
+	}
 
 	if ( (fp = fopen(ipForwardFile, "w")) == NULL ) {
 		result = FAILURE;
 	}
 	else {
-		if (fprintf(fp, "1") != 1) {
+		if (fprintf(fp, "%c", c) != 1) {
 			result = FAILURE;
 		};
 	}
@@ -37,20 +44,26 @@ int ipForward() {
 	return result;
 }
 
-int enablePromisc(struct ifreq *ifr, char *interface, int sockfd) {
+int enablePromisc(char *interface) {
 	int index;
-	memset(ifr, 0, sizeof(*ifr));
-	strncpy(ifr->ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
+	memset(&ifr, 0, sizeof(ifr));
+	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
 
-	if ( (index = ioctl(sockfd, SIOCGIFINDEX, ifr)) != FAILURE ) {
+	if ( (index = ioctl(sockfd, SIOCGIFINDEX, &ifr)) != FAILURE ) {
 
-		ioctl(sockfd, SIOCGIFFLAGS, ifr);
-		ifr->ifr_ifru.ifru_flags |= IFF_PROMISC;
-		ioctl(sockfd, SIOCSIFFLAGS, ifr);
+		ioctl(sockfd, SIOCGIFFLAGS, &ifr);
+		ifr.ifr_ifru.ifru_flags |= IFF_PROMISC;
+		ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 	}
 
 	return index;
 
+}
+
+void disablePromisc() {
+	ioctl(sockfd, SIOCGIFFLAGS, &ifr);
+	ifr.ifr_ifru.ifru_flags &= ~IFF_PROMISC;
+	ioctl(sockfd, SIOCSIFFLAGS, &ifr);
 }
 
 
@@ -94,4 +107,14 @@ void dump(unsigned char *data_buffer, unsigned int length) {
 			printf("\n");
 		}
 	}
+}
+
+void sigHandler(int signum) {
+	
+	if (ipForward(0) == FAILURE) {
+		panic("Error in ipForward");
+	}
+	disablePromisc();
+
+	exit(0);
 }

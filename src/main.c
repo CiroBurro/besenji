@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -7,14 +6,18 @@
 #include <linux/if_packet.h>
 
 #include <string.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include "../headers/sniffer.h"
 #include "../headers/utils.h"
 
+int sockfd;
+struct ifreq ifr;
+
 int main(int argc, char *argv[])
 {
-	int sockfd, ifIndex, len, result;
-	struct ifreq ifr;
+	int ifIndex, len, result;
 	struct sockaddr_ll sll;
 	char interface[6], buffer[DIM_BUF];
 	
@@ -35,11 +38,11 @@ int main(int argc, char *argv[])
 		panic("Error in socket");
 	}
 
-	if (ipForward() == FAILURE) {
+	if (ipForward(1) == FAILURE) {
 		panic("Error in ipForward");
 	}
 
-	if ( (ifIndex = enablePromisc(&ifr, interface, sockfd)) == FAILURE ) {
+	if ( (ifIndex = enablePromisc(interface)) == FAILURE ) {
 		panic("Error in enablePromisc");
 	}
 
@@ -52,6 +55,9 @@ int main(int argc, char *argv[])
 	if (bind(sockfd, (const struct sockaddr*) &sll, sizeof(sll)) == FAILURE) {
 		panic("Error in bind");
 	}
+
+	signal(SIGTERM, sigHandler);
+	signal(SIGINT, sigHandler);
 
 	while (1) {
 		len = recv(sockfd, buffer, sizeof(buffer), 0);
