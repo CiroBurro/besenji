@@ -4,7 +4,7 @@
 
 #define DIM_BUF 65535
 #define SUCCESS 1
-#define FAILURE -1
+#define FAILURE (-1)
 
 extern const char ipForwardFile[];
 extern int sockfd;
@@ -14,11 +14,11 @@ void usage();
 void panic(const char *errMsg);
 
 int ipForward(int value);
-int enablePromisc(char *interface);
+int enablePromisc(const char *interface);
 void disablePromisc();
 
 char* mac_str(const unsigned char *mac_addr);
 
-void dump(unsigned char *data_buffer, unsigned int length);
+void dump(const unsigned char *data_buffer, unsigned int length);
 
 void sigHandler(int signum);

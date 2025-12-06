@@ -13,7 +13,7 @@
 #include "../headers/sniffer.h"
 #include "../headers/utils.h"
 
-int parseEth(struct ethhdr *ethHdr) {
+int parseEth(const struct ethhdr *ethHdr) {
 	uint16_t protocol;
 	char protName[6];
 	int isIp = 0;
@@ -34,7 +34,7 @@ int parseEth(struct ethhdr *ethHdr) {
 	return isIp;
 }
 
-int parseIp(struct iphdr *ipHdr) {
+int parseIp(const struct iphdr *ipHdr) {
 	uint8_t protocol;
 	char protName[10], srcIp[INET_ADDRSTRLEN], destIp[INET_ADDRSTRLEN];
 
@@ -57,7 +57,7 @@ int parseIp(struct iphdr *ipHdr) {
 	return protocol;
 }
 
-void parseTcp(struct tcphdr *tcpHdr) {
+void parseTcp(const struct tcphdr *tcpHdr) {
 	
 	printf("[L4: TCP]\n  Source port:\t%hu\n  Dest port:\t%hu\n  Seq:\t%u\n  Ack:\t%u\n Flags: ", ntohs(tcpHdr->source), ntohs(tcpHdr->dest), ntohl(tcpHdr->seq), ntohl(tcpHdr->ack_seq));
 
@@ -83,24 +83,25 @@ void parseTcp(struct tcphdr *tcpHdr) {
 
 }
 
-void parseUdp(struct udphdr *udpHdr) {
+void parseUdp(const struct udphdr *udpHdr) {
 
 	printf("[L4: UDP]\n  Source port:\t%hu\n  Dest port:\t%hu\n\n", ntohs(udpHdr->source), ntohs(udpHdr->dest));
 
 }
 
 
-int handlePacket(char *buf, int len) {
+void handlePacket(char* buf, unsigned int len) {
 	struct ethhdr *ethHdr;
 	struct iphdr *ipHdr;
 	struct tcphdr *tcpHdr;
 	struct udphdr *udpHdr;
-	int isIp, ipProt, dataLen;
+	int isIp, ipProt;
+	unsigned dataLen;
 
 	printf("\n\n--- Captured Packet (%d bytes) ---\n", len);
 
 	if (len < sizeof(struct ethhdr)) {
-		return SUCCESS;
+		return;
 	}
 
 	ethHdr = (struct ethhdr*) buf;
@@ -110,21 +111,21 @@ int handlePacket(char *buf, int len) {
 		
 		if (len < sizeof(struct ethhdr) + sizeof(struct iphdr)) {
 			printf("Packet too small for IP header\n");
-			return SUCCESS;
+			return;
 		}
 	
 		ipHdr = (struct iphdr*) (buf + sizeof(struct ethhdr));
 		ipProt = parseIp(ipHdr);
 
 		if (ipProt == IPPROTO_TCP) {
-			tcpHdr = (struct tcphdr*) (buf + sizeof(struct ethhdr) + sizeof(ipHdr));
+			tcpHdr = (struct tcphdr*) (buf + sizeof(struct ethhdr) + ipHdr->ihl * 4);
 			parseTcp(tcpHdr);
 
-			dataLen = len - sizeof(struct ethhdr) - sizeof(ipHdr) - sizeof(tcpHdr);
+			dataLen = len - sizeof(struct ethhdr) - (ipHdr->ihl * 4) - (tcpHdr->doff * 4);
 
 			if (dataLen > 0) {
 				printf("%u bytes of packet data\n", dataLen);
-				dump(buf + len - dataLen, dataLen);
+				dump((const unsigned char*)(buf + len - dataLen), dataLen);
 			}
 			else {
 				printf("No Packet Data\n\n");
@@ -133,14 +134,14 @@ int handlePacket(char *buf, int len) {
 		}
 		else if (ipProt == IPPROTO_UDP) {
 
-			udpHdr = (struct udphdr*) (buf + sizeof(struct ethhdr) + sizeof(ipHdr));
+			udpHdr = (struct udphdr*) (buf + sizeof(struct ethhdr) + ipHdr->ihl * 4);
 			parseUdp(udpHdr);
 
-			dataLen = len - sizeof(struct ethhdr) - sizeof(ipHdr) - sizeof(udpHdr);
+			dataLen = len - sizeof(struct ethhdr) - (ipHdr->ihl * 4) - sizeof(struct udphdr);
 
 			if (dataLen > 0) {
 				printf("%u bytes of packet data\n", dataLen);
-				dump(buf + len - dataLen, dataLen);
+				dump((const unsigned char*)(buf + len - dataLen), dataLen);
 			}
 			else {
 				printf("No Packet Data\n\n");
@@ -150,7 +151,5 @@ int handlePacket(char *buf, int len) {
 
 	}
 
-
-	return SUCCESS;
 }
 

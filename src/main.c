@@ -1,13 +1,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include <net/if.h>
 #include <linux/if_packet.h>
 
 #include <string.h>
 #include <signal.h>
-#include <unistd.h>
 
 #include "../headers/sniffer.h"
 #include "../headers/utils.h"
@@ -17,7 +15,7 @@ struct ifreq ifr;
 
 int main(int argc, char *argv[])
 {
-	int ifIndex, len, result;
+	int ifIndex, len;
 	struct sockaddr_ll sll;
 	char interface[6], buffer[DIM_BUF];
 	
@@ -62,8 +60,7 @@ int main(int argc, char *argv[])
 	while (1) {
 		len = recv(sockfd, buffer, sizeof(buffer), 0);
 
-		result = handlePacket(buffer, len);
-	
+		handlePacket(buffer, len);
 	}
 
 	return 0;

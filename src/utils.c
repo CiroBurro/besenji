@@ -20,15 +20,15 @@ void panic(const char *errMsg) {
 	exit(FAILURE);
 }
 
-int ipForward(int value) {
+int ipForward(const int value) {
 	FILE *fp;
 	int result = SUCCESS;
-	char c;
+	char c = ' ';
 
 	switch (value) {
 		case 0: c = '0'; break;
 		case 1: c = '1'; break;
-		default: panic("Invalid value for ip forwaring");
+		default: panic("Invalid value for ip forwarding");
 	}
 
 	if ( (fp = fopen(ipForwardFile, "w")) == NULL ) {
@@ -44,7 +44,7 @@ int ipForward(int value) {
 	return result;
 }
 
-int enablePromisc(char *interface) {
+int enablePromisc(const char *interface) {
 	int index;
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_ifrn.ifrn_name, interface, IFNAMSIZ);
@@ -77,7 +77,7 @@ char* mac_str(const unsigned char *mac_addr) {
 	return buf_mac;
 }
 
-void dump(unsigned char *data_buffer, unsigned int length) {
+void dump(const unsigned char *data_buffer, const unsigned int length) {
 	unsigned char byte;
 	unsigned int i, j;
 
