@@ -5,7 +5,7 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
-void handlePacket(char* buf, unsigned int len);
+void handlePacket(const char* buf, unsigned int len);
 
 int parseEth(const struct ethhdr *ethHdr);
 int parseIp(const struct iphdr *ipHdr);

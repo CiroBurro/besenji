@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 {
 	int ifIndex, len;
 	struct sockaddr_ll sll;
-	char interface[6], buffer[DIM_BUF];
+	char interface[IFNAMSIZ], buffer[DIM_BUF];
 	
 
 	if (argc != 2){

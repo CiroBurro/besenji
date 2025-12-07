@@ -17,7 +17,7 @@ int ipForward(int value);
 int enablePromisc(const char *interface);
 void disablePromisc();
 
-char* mac_str(const unsigned char *mac_addr);
+const char* mac_str(const unsigned char *mac_addr);
 
 void dump(const unsigned char *data_buffer, unsigned int length);
 

@@ -38,9 +38,10 @@ int ipForward(const int value) {
 		if (fprintf(fp, "%c", c) != 1) {
 			result = FAILURE;
 		};
+
+		fclose(fp);
 	}
 
-	fclose(fp);
 	return result;
 }
 

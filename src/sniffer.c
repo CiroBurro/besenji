@@ -90,7 +90,7 @@ void parseUdp(const struct udphdr *udpHdr) {
 }
 
 
-void handlePacket(char* buf, unsigned int len) {
+void handlePacket(const char* buf, unsigned int len) {
 	struct ethhdr *ethHdr;
 	struct iphdr *ipHdr;
 	struct tcphdr *tcpHdr;
