@@ -7,6 +7,18 @@
 
 #include "../headers/utils.h"
 
+/*
+ * utils.c - helper routines
+ *
+ * This module provides small utility functions used by the sniffer:
+ *  - usage / panic: simple program messaging and exit
+ *  - ipForward: temporarily enable/disable IPv4 forwarding via /proc
+ *  - enablePromisc / disablePromisc: toggle interface promiscuous mode
+ *  - mac_str: human-readable MAC address formatting
+ *  - dump: hex + ASCII payload dump
+ *  - sigHandler: signal handler to restore system state on exit
+ */
+
 const char ipForwardFile[] = "/proc/sys/net/ipv4/ip_forward";
 
 void usage() {
@@ -20,6 +32,10 @@ void panic(const char *errMsg) {
 	exit(FAILURE);
 }
 
+/*
+ * ipForward - write '1' or '0' to /proc/sys/net/ipv4/ip_forward
+ * Returns SUCCESS on success or FAILURE on error.
+ */
 int ipForward(const int value) {
 	FILE *fp;
 	int result = SUCCESS;
@@ -45,6 +61,11 @@ int ipForward(const int value) {
 	return result;
 }
 
+/*
+ * enablePromisc - enable promiscuous mode on a named interface
+ * Returns the interface index (>0) on success or FAILURE on error.
+ * Note: this function uses the global 'ifr' and the global 'sockfd'.
+ */
 int enablePromisc(const char *interface) {
 	int index;
 	memset(&ifr, 0, sizeof(ifr));
@@ -61,6 +82,9 @@ int enablePromisc(const char *interface) {
 
 }
 
+/*
+ * disablePromisc - clear promiscuous bit on the previously used interface
+ */
 void disablePromisc() {
 	ioctl(sockfd, SIOCGIFFLAGS, &ifr);
 	ifr.ifr_ifru.ifru_flags &= ~IFF_PROMISC;
@@ -68,7 +92,11 @@ void disablePromisc() {
 }
 
 
-char* mac_str(const unsigned char *mac_addr) {
+/*
+ * mac_str - format a 6-byte MAC address into a static string buffer
+ * The returned pointer points to a static buffer (overwritten on each call).
+ */
+const char* mac_str(const unsigned char *mac_addr) {
 	static char buf_mac[18];
 
 	snprintf(buf_mac, 18, "%02X:%02X:%02X:%02X:%02X:%02X",
@@ -78,6 +106,10 @@ char* mac_str(const unsigned char *mac_addr) {
 	return buf_mac;
 }
 
+/*
+ * dump - print a hex + ASCII dump of 'length' bytes from data_buffer
+ * Each line contains up to 16 bytes with a delimiter between hex and ASCII.
+ */
 void dump(const unsigned char *data_buffer, const unsigned int length) {
 	unsigned char byte;
 	unsigned int i, j;
@@ -110,6 +142,9 @@ void dump(const unsigned char *data_buffer, const unsigned int length) {
 	}
 }
 
+/*
+ * sigHandler - restore ip forwarding and disable promiscuous mode then exit
+ */
 void sigHandler(int signum) {
 	
 	if (ipForward(0) == FAILURE) {
